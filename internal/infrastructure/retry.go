@@ -18,7 +18,7 @@ func NewExponentialBackoff(retry int) *RetryWithBackoff {
 }
 
 // Retry retries the operation with exponential backoff on failure
-func (r *RetryWithBackoff) Retry(ctx context.Context, operation func() error) error {
+func (r *RetryWithBackoff) Retry(operation func() error) error {
 	var err error
 
 	if r.retries < 1 {

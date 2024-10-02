@@ -32,7 +32,7 @@ func (u *GetPostsUseCase) GetPosts(ctx context.Context, url string) ([]dto.Post,
 			return u.client.DoRequest(req, &posts)
 		}
 
-		err = u.retryStrategy.Retry(ctx, callback)
+		err = u.retryStrategy.Retry(callback)
 		if err != nil {
 			return err
 		}

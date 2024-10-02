@@ -18,7 +18,7 @@ func NewRabbitMqClient(amqpURL, queueName string) (*RabbitMqClient, error) {
 
 	ch, err := conn.Channel()
 	if err != nil {
-		conn.Close()
+		conn.Close() // todo handle error
 		return nil, err
 	}
 
@@ -31,8 +31,8 @@ func NewRabbitMqClient(amqpURL, queueName string) (*RabbitMqClient, error) {
 		nil,   // arguments
 	)
 	if err != nil {
-		ch.Close()
-		conn.Close()
+		ch.Close()   // todo handle error
+		conn.Close() // todo handle error
 		return nil, err
 	}
 
@@ -44,6 +44,6 @@ func NewRabbitMqClient(amqpURL, queueName string) (*RabbitMqClient, error) {
 }
 
 func (r *RabbitMqClient) Close() {
-	r.conn.Close()
-	r.channel.Close()
+	r.conn.Close()    // todo handle error
+	r.channel.Close() // todo handle error
 }
