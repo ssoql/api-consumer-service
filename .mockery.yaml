@@ -1,0 +1,26 @@
+quiet: False
+disable-version-string: True
+with-expecter: True
+mockname: "{{.InterfaceName}}"
+filename: "{{.MockName}}.go"
+outpkg: mocks
+tags: "custom2"
+packages:
+  api-consumer-service/internal/use_cases:
+    config:
+      recursive: True
+      all: True
+      dir: "{{.InterfaceDir}}/mocks"
+      filename: "{{.InterfaceName}}_mock.go"
+      mockname: "Mock{{.InterfaceName}}"
+#      outpkg: "{{.PackageName}}"
+#      inpackage: True
+  api-consumer-service/internal/use_cases/interfaces:
+    config:
+      recursive: True
+      all: True
+      dir: "{{.InterfaceDir}}/../mocks"
+      filename: "{{.InterfaceName}}_mock.go"
+      mockname: "Mock{{.InterfaceName}}"
+#      outpkg: "{{.PackageName}}"
+#      inpackage: True

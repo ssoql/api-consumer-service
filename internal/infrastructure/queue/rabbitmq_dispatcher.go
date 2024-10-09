@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/streadway/amqp"
+	"github.com/rabbitmq/amqp091-go"
 
 	"api-consumer-service/internal/dto"
 	"api-consumer-service/internal/use_cases/interfaces"
@@ -40,8 +40,6 @@ func (r *RabbitmqDispatcher) Dispatch(ctx context.Context, postChan <-chan []dto
 			}
 		}
 	}
-
-	return nil
 }
 
 func (r *RabbitmqDispatcher) publishPost(post dto.Post) error {
@@ -54,7 +52,7 @@ func (r *RabbitmqDispatcher) publishPost(post dto.Post) error {
 		r.client.queue.Name, // routing key (queue name)
 		false,               // mandatory
 		false,               // immediate
-		amqp.Publishing{
+		amqp091.Publishing{
 			ContentType: "application/json",
 			Body:        body,
 		},

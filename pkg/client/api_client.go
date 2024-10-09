@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -30,14 +31,21 @@ func (c *ApiClient) DoRequest(request *http.Request, results any) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+
+	closeReader := func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("failed to close response bordy: %v", err)
+		}
+	}
+
+	defer closeReader()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("received non-200 response: %d", resp.StatusCode)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(results)
-	resp.Body.Close()
+	closeReader()
 
 	if err != nil {
 		return err

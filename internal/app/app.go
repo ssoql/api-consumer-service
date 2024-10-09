@@ -21,7 +21,6 @@ import (
 )
 
 func Run(env *config.Env) {
-	log.Printf("CPUs: %d", runtime.NumCPU())
 	urlSeed := env.ApiSeedUrl
 	concurrency := runtime.NumCPU() / 2
 
@@ -48,13 +47,15 @@ func Run(env *config.Env) {
 	postsChan := make(chan []dto.Post, total)
 
 	createPagesQueue(total, urlSeed, pageChan)
+	// read posts from channel and send them to rabbitmq
+	go func() {
+		if err := sendPostsUseCase.Send(ctx, postsChan); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	// consume posts from API and write them into channel
+	fetchAllPosts(ctx, getPostsUseCase, concurrency, pageChan, postsChan)
 
-	var wg sync.WaitGroup
-
-	go sendPostsUseCase.Send(ctx, postsChan)
-	fetchAllPosts(ctx, &wg, getPostsUseCase, concurrency, pageChan, postsChan)
-
-	wg.Wait()
 	close(postsChan)
 }
 
@@ -73,8 +74,10 @@ func createPagesQueue(total int, urlSeed string, pageChan chan<- string) {
 	close(pageChan)
 }
 
-func fetchAllPosts(ctx context.Context, wg *sync.WaitGroup, useCase *use_cases.GetPostsUseCase, jobsCounter int, pageChan <-chan string,
+func fetchAllPosts(ctx context.Context, useCase use_cases.PostsGetter, jobsCounter int, pageChan <-chan string,
 	postsChan chan<- []dto.Post) {
+	var wg sync.WaitGroup
+
 	for i := 0; i < jobsCounter; i++ {
 		wg.Add(1)
 		go func(id int) {
@@ -84,20 +87,23 @@ func fetchAllPosts(ctx context.Context, wg *sync.WaitGroup, useCase *use_cases.G
 				fmt.Printf("Worker %d fetching page %s\n", id, page)
 				start := time.Now()
 
-				posts, err := useCase.GetPosts(ctx, page)
+				posts, err := useCase.Handle(ctx, page)
 				if err != nil {
 					fmt.Printf("Error fetching posts: %s\n", err)
 					if errors.Is(err, context.Canceled) {
 						return
 					}
+
+					continue
 				}
 				elapsed := time.Since(start)
 
 				postsChan <- posts
 				fmt.Printf("Worker %d finished page %s in %s\n", id, page, elapsed.String())
-				//time.Sleep(10 * time.Millisecond)
-				time.Sleep(3 * time.Second)
+				time.Sleep(10 * time.Millisecond)
+				//time.Sleep(3 * time.Second)
 			}
 		}(i)
 	}
+	wg.Wait()
 }

@@ -1,24 +1,28 @@
 package queue
 
 import (
-	"github.com/streadway/amqp"
+	"log"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type RabbitMqClient struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	queue   amqp.Queue
+	conn    *amqp091.Connection
+	channel *amqp091.Channel
+	queue   amqp091.Queue
 }
 
 func NewRabbitMqClient(amqpURL, queueName string) (*RabbitMqClient, error) {
-	conn, err := amqp.Dial(amqpURL)
+	conn, err := amqp091.Dial(amqpURL)
 	if err != nil {
 		return nil, err
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		conn.Close() // todo handle error
+		if err := conn.Close(); err != nil {
+			log.Printf("failed to close rabbitmq connection: %v\n", err)
+		}
 		return nil, err
 	}
 
@@ -31,8 +35,7 @@ func NewRabbitMqClient(amqpURL, queueName string) (*RabbitMqClient, error) {
 		nil,   // arguments
 	)
 	if err != nil {
-		ch.Close()   // todo handle error
-		conn.Close() // todo handle error
+		close(conn, ch)
 		return nil, err
 	}
 
@@ -44,6 +47,14 @@ func NewRabbitMqClient(amqpURL, queueName string) (*RabbitMqClient, error) {
 }
 
 func (r *RabbitMqClient) Close() {
-	r.conn.Close()    // todo handle error
-	r.channel.Close() // todo handle error
+	close(r.conn, r.channel)
+}
+
+func close(connection *amqp091.Connection, channel *amqp091.Channel) {
+	if err := connection.Close(); err != nil {
+		log.Printf("failed to close rabbitmq connection: %v\n", err)
+	}
+	if err := channel.Close(); err != nil {
+		log.Printf("failed to close rabbitmq channel: %v\n", err)
+	}
 }

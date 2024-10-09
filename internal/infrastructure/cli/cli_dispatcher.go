@@ -25,10 +25,8 @@ func (c *CliDispatch) Dispatch(ctx context.Context, postChan <-chan []dto.Post) 
 			}
 
 			for _, post := range posts {
-				fmt.Printf("Post %d: %s\n", post.ID, post.Title)
+				fmt.Printf("Post %v\n", post)
 			}
 		}
 	}
-
-	return nil
 }

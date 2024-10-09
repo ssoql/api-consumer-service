@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"api-consumer-service/internal/dto"
 	"api-consumer-service/internal/use_cases/interfaces"
 )
 
@@ -19,20 +20,19 @@ func NewGetTotalUseCase(client interfaces.ApiConsumer) *GetTotalUseCase {
 }
 
 func (u *GetTotalUseCase) GetTotal(ctx context.Context, url string) (int, error) {
-	var total int
-	type responseTotal struct {
-		Total int `json:"total"`
-	}
-	respTotal := responseTotal{}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return total, err
+		return 0, err
 	}
 
-	err = u.client.DoRequest(req, &respTotal)
+	respTotal := dto.ResponseTotal{}
+	callback := func() error {
+		return u.client.DoRequest(req, &respTotal)
+	}
+
+	err = u.retryStrategy.Retry(callback)
 	if err != nil {
-		return total, err
+		return 0, err
 	}
 
 	return respTotal.Total, nil
