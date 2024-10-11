@@ -16,12 +16,11 @@ import (
 
 type getTotalTestSuite struct{}
 
-func (r getTotalTestSuite) MockApiClientSuccess(t *testing.T) interfaces.ApiConsumer {
+func (r *getTotalTestSuite) MockApiClientSuccess(t *testing.T) interfaces.ApiConsumer {
 	m := mocks.NewMockApiConsumer(t)
 	m.On("DoRequest", mock.Anything, mock.Anything).Return(func(request *http.Request, total any) error {
 		tp, ok := total.(*dto.ResponseTotal)
 		assert.True(t, ok)
-
 		tp.Total = 1
 
 		return nil
@@ -30,7 +29,7 @@ func (r getTotalTestSuite) MockApiClientSuccess(t *testing.T) interfaces.ApiCons
 	return m
 }
 
-func (r getTotalTestSuite) MockApiClientFailure(t *testing.T) interfaces.ApiConsumer {
+func (r *getTotalTestSuite) MockApiClientFailure(t *testing.T) interfaces.ApiConsumer {
 	m := mocks.NewMockApiConsumer(t)
 	m.On("DoRequest", mock.Anything, mock.Anything).Return(func(request *http.Request, total any) error {
 		return errors.New("api error")
@@ -38,7 +37,7 @@ func (r getTotalTestSuite) MockApiClientFailure(t *testing.T) interfaces.ApiCons
 	return m
 }
 
-func (r getTotalTestSuite) MockRetryPolicy(t *testing.T) interfaces.Retryer {
+func (r *getTotalTestSuite) MockRetryPolicy(t *testing.T) interfaces.Retryer {
 	m := mocks.NewMockRetryer(t)
 	m.On("Retry", mock.Anything).Return(func(operation func() error) error {
 		return operation()

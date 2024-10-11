@@ -3,7 +3,6 @@ package use_cases
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"api-consumer-service/internal/dto"
 	"api-consumer-service/internal/use_cases/interfaces"
@@ -19,11 +18,9 @@ func NewSendPostsUseCase(dispatcher interfaces.PostsDispatcher) *SendPostsUseCas
 	}
 }
 
-func (u *SendPostsUseCase) Send(ctx context.Context, ch <-chan []dto.Post) error {
+func (u *SendPostsUseCase) Handle(ctx context.Context, ch <-chan []dto.Post) error {
 	err := u.dispatcher.Dispatch(ctx, ch)
 	if err != nil {
-		log.Println("error: " + err.Error())
-
 		return fmt.Errorf("failed to send posts: %w", err)
 	}
 

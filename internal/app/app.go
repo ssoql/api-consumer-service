@@ -47,10 +47,10 @@ func Run(env *config.Env) {
 	postsChan := make(chan []dto.Post, total)
 
 	createPagesQueue(total, urlSeed, pageChan)
-	// read posts from channel and send them to rabbitmq
+	// read posts from channel and send them with dispatcher
 	go func() {
-		if err := sendPostsUseCase.Send(ctx, postsChan); err != nil {
-			log.Fatal(err)
+		if err := sendPostsUseCase.Handle(ctx, postsChan); err != nil {
+			log.Printf("Error sending posts: %v", err)
 		}
 	}()
 	// consume posts from API and write them into channel
